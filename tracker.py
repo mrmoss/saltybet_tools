@@ -12,6 +12,8 @@ def available(conn):
 		pass
 	return False
 
+def starts_with(in_str,match):
+	return (match in in_str and in_str.index(match)==0)
 if __name__=='__main__':
 	sock=None
 	while True:
@@ -33,12 +35,16 @@ if __name__=='__main__':
 						line+=buf[ii]
 						if line[-2:]=='\r\n':
 							line=line.rstrip()
+							ping_math='PING :tmi.twitch.tv'
 							waifu_match=':waifu4u!waifu4u@waifu4u.tmi.twitch.tv PRIVMSG #saltybet :'
-							if waifu_match in line and line.index(waifu_match)==0:
+
+							if starts_with(line,'PING :tmi.twitch.tv'):
+								sock.send('PONG :tmi.twitch.tv\r\n')
+							elif starts_with(line,waifu_match):
 								line=line[len(waifu_match):]
-								print(line)
-								#with open('log','a') as fstr:
-								#	fstr.write(line+"\n")
+								#print(line)
+								with open('log','a') as fstr:
+									fstr.write(line+"\n")
 							line=''
 				time.sleep(0.1)
 		except KeyboardInterrupt:
