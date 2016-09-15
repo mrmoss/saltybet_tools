@@ -81,8 +81,8 @@ class database:
 		try:
 			#Store winner/loser as base64 encoded string to prevent injection...
 			#  I know prepared statements supposedly prevent this...but yea...
-			winner='"'+base64.b64encode(winner)+'"'
-			loser='"'+base64.b64encode(loser)+'"'
+			winner=base64.b64encode(winner)
+			loser=base64.b64encode(loser)
 
 			#Get ID
 			self.cursor.execute('select id from saltybet where winner=? and loser=?',(winner,loser))

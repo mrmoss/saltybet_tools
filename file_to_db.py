@@ -19,7 +19,7 @@ if __name__=='__main__':
 		if verbose:
 			parser.onecho=echo
 		db.connect('saltybet.db')
-		with open('log2.bak') as log:
+		with open('log.bak') as log:
 			for line in log:
 				parser.parse(line.rstrip()+'\r\n')
 	except KeyboardInterrupt:
