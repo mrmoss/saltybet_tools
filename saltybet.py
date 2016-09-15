@@ -3,15 +3,11 @@ import select
 import socket
 import sqlite3
 
-class client:
-	def __init__(self,ip='irc.chat.twitch.tv',port=6667,database_file='saltybet.db'):
+class network:
+	def __init__(self):
 		self.sock=None
-		self.line=''
-		self.connect(ip,port)
-		self.db=sqlite3_db(database_file)
-		self.parser=parser()
 
-	def connect(self,ip=None,port=None):
+	def connect(self,ip,port):
 		#Close old session
 		self.close()
 
@@ -45,9 +41,13 @@ class client:
 			pass
 		return False
 
-	def run(self):
+	def pong(self):
+		self.sock.send('PONG :tmi.twitch.tv\r\n')
+
+	def read(self):
 		try:
 			#Got bytes
+			buf=''
 			if self.available(self.sock):
 				buf=self.sock.recv(1024)
 
@@ -55,50 +55,14 @@ class client:
 				if not buf:
 					raise Exception("Disconnect")
 
-				#Go through bytes
-				for ii in range(len(buf)):
-					self.line+=buf[ii]
-
-					#Got a line
-					if self.line[-2:]=='\r\n':
-						self.line=self.line.rstrip()
-
-						#Parse ping (keepalive)
-						ping_match='PING :tmi.twitch.tv'
-						if self.line.find('PING :tmi.twitch.tv')==0:
-							self.sock.send('PONG :tmi.twitch.tv\r\n')
-
-						#Parse waifu
-						waifu_match=':waifu4u!waifu4u@waifu4u.tmi.twitch.tv PRIVMSG #saltybet :'
-						if self.line.find(waifu_match)==0:
-							self.line=self.line[len(waifu_match):]
-
-							#Match
-							if self.parser.parse_match(self.line):
-								print('Match: '+self.parser.red+' vs '+self.parser.blue)
-
-							#Payout
-							elif self.parser.parse_payout(self.line) and len(self.parser.red)>0 and len(self.parser.blue)>0:
-								if self.parser.red[:4]!='Team' and self.parser.blue[:4]!='Team':
-									if self.parser.last_win is 'red':
-										self.db.insert(self.parser.red,self.parser.blue)
-									if self.parser.last_win is 'blue':
-										self.db.insert(self.parser.blue,self.parser.red)
-								else:
-									print('Ignore team match')
-
-						#Clear line...
-						self.line=''
+			return buf
 
 		#Error, die and rethrow
 		except:
 			self.close()
 			raise
 
-class sqlite3_db:
-	def __init__(self,filename):
-		self.connect(filename)
-
+class database:
 	def connect(self,filename):
 		self.close()
 		self.db=sqlite3.connect(filename)
@@ -142,8 +106,16 @@ class sqlite3_db:
 		except:
 			self.close()
 			raise
+
 class parser:
-	def __init__(self):
+	def __init__(self,onecho=None,onping=None,onwaifu=None,onmatch=None,onwin=None,onteam=None):
+		self.onecho=onecho
+		self.onwaifu=onwaifu
+		self.onping=onping
+		self.onmatch=onmatch
+		self.onwin=onwin
+		self.onteam=onteam
+		self.line=''
 		self.reset()
 
 	def reset(self):
@@ -151,6 +123,46 @@ class parser:
 		self.red=''
 		self.blue=''
 		self.last_win=''
+
+	def parse(self,buf):
+		#Go through bytes
+		for ii in range(len(buf)):
+			self.line+=buf[ii]
+
+			#Got a line
+			if self.line[-2:]=='\r\n':
+				self.line=self.line.rstrip()
+				if self.onecho:
+					self.onecho(self.line)
+
+				#Parse ping (keepalive)
+				ping_match='PING :tmi.twitch.tv'
+				if self.line.find('PING :tmi.twitch.tv')==0 and self.onping:
+					self.onping()
+
+				#Parse waifu
+				waifu_match=':waifu4u!waifu4u@waifu4u.tmi.twitch.tv PRIVMSG #saltybet :'
+				if self.line.find(waifu_match)==0:
+					self.line=self.line[len(waifu_match):]
+					if self.onwaifu:
+						self.onwaifu(self.line)
+
+					#Match
+					if self.parse_match(self.line) and self.onmatch:
+						self.onmatch(self.red,self.blue)
+
+					#Payout
+					elif self.parse_payout(self.line) and len(self.red)>0 and len(self.blue)>0:
+						if self.red[:4]!='Team' and self.blue[:4]!='Team':
+							if self.last_win is 'red' and self.onwin:
+								self.onwin(self.red,self.blue)
+							if self.last_win is 'blue' and self.onwin:
+								self.onwin(self.blue,self.red)
+						elif self.onteam:
+							self.onteam()
+
+				#Clear line...
+				self.line=''
 
 	def parse_match(self,line):
 		#Remove trailing/ending whitespace
@@ -161,24 +173,20 @@ class parser:
 		if line.find(match)!=0:
 			return False
 		line=line[len(match):]
-		self.last_win=''
+		self.reset()
 
 		#Get red side
-		red=''
+		self.red=''
 		for ii in line:
 			if ii=='(':
 				break
-			red+=ii
-		red=red.strip()
+			self.red+=ii
+		self.red=self.red.strip()
 
 		#Teams aren't used
-		if red[:4]=='Team':
-			self.red=''
-			self.blue=''
+		if self.red[:4]=='Team':
+			self.reset()
 			return False
-
-		#Good red side
-		self.red=red
 
 		#Strip odds and bet size
 		line=line[len(self.red):]
