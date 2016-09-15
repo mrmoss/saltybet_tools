@@ -169,38 +169,33 @@ class parser:
 		line=line.strip()
 
 		#Check for match set, if not stop here
-		match='Bets are locked. '
+		match='Bets are OPEN for '
 		if line.find(match)!=0:
 			return False
 		line=line[len(match):]
 		self.reset()
 
-		#Get red side
-		self.red=''
-		for ii in line:
-			if ii=='(':
-				break
-			self.red+=ii
-		self.red=self.red.strip()
+		#Get end of versus statement
+		end_index=line.find('!')
+		if end_index<0:
+			return False
+		line=line[:end_index]
 
-		#Teams aren't used
+		#Split up versus statement, more than two means something weird is going on
+		sides=line.split(' vs ')
+		if len(sides)!=2:
+			return False
+
+		#Get red side
+		self.red=sides[0].strip()
+
+		#Teams aren't used here
 		if self.red[:4]=='Team':
 			self.reset()
 			return False
 
-		#Strip odds and bet size
-		line=line[len(self.red):]
-		comma_index=line.find(',')
-		if comma_index>=0 and comma_index!=len(line):
-			line=line[comma_index+1:]
-
 		#Get blue side
-		self.blue=''
-		for ii in line:
-			if ii=='(':
-				break
-			self.blue+=ii
-		self.blue=self.blue.strip()
+		self.blue=sides[1].strip()
 
 		#Done
 		return True
