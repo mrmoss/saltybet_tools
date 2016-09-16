@@ -13,7 +13,8 @@ def match(red,blue):
 
 def insert(winner,loser):
 	print('Result: "'+winner+'" beat "'+loser+'"')
-	db.insert(winner,loser)
+	db.insert_ranking(winner,loser)
+	db.insert_fight(winner,loser)
 
 def pong():
 	print('Keepalive')
