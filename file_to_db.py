@@ -10,7 +10,8 @@ def team():
 	print('Ignoring team entry.')
 
 def insert(winner,loser):
-	db.insert(winner,loser)
+	db.insert_ranking(winner,loser)
+	db.insert_fight(winner,loser)
 
 if __name__=='__main__':
 	verbose=False

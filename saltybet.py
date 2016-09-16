@@ -1,4 +1,3 @@
-import base64
 import select
 import socket
 import sqlite3
@@ -67,7 +66,8 @@ class database:
 		self.close()
 		self.db=sqlite3.connect(filename)
 		self.cursor=self.db.cursor()
-		self.cursor.execute('create table if not exists saltybet(id integer primary key autoincrement,winner text,loser text,count integer)')
+		self.cursor.execute('create table if not exists fights(id integer primary key autoincrement,winner text,loser text,count integer)')
+		self.cursor.execute('create table if not exists rankings(id integer primary key autoincrement,fighter text,wins integer,losses integer,fights integer,win_ratio integer,lose_ratio integer)')
 		self.db.commit()
 
 	def close(self):
@@ -77,21 +77,55 @@ class database:
 		except:
 			pass
 
-	def insert(self,winner,loser):
+	def insert_ranking(self,winner,loser):
 		try:
-			#Store winner/loser as base64 encoded string to prevent injection...
-			#  I know prepared statements supposedly prevent this...but yea...
-			winner=base64.b64encode(winner)
-			loser=base64.b64encode(loser)
+			sqlite_statement='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio) values(?,?,?,?,?,?,?)'
 
+			#Winner Entry
+			self.cursor.execute('select * from rankings where fighter=?',(winner,))
+			query=self.cursor.fetchone()
+			if not query or len(query)!=7:
+				query=(None,winner,0,0,0,0,0)
+			row_id=query[0]
+			name=query[1]
+			wins=query[2]+1
+			losses=query[3]
+			fights=query[4]+1
+			winratio=int(wins/float(fights)*100)
+			loseratio=100-winratio
+			self.cursor.execute(sqlite_statement,(row_id,name,wins,losses,fights,winratio,loseratio))
+			self.db.commit()
+
+			#Loser Entry
+			self.cursor.execute('select * from rankings where fighter=?',(loser,))
+			query=self.cursor.fetchone()
+			if not query or len(query)!=7:
+				query=(None,loser,0,0,0,0,0)
+			row_id=query[0]
+			name=query[1]
+			wins=query[2]
+			losses=query[3]+1
+			fights=query[4]+1
+			winratio=int(wins/float(fights)*100)
+			loseratio=100-winratio
+			self.cursor.execute(sqlite_statement,(row_id,name,wins,losses,fights,winratio,loseratio))
+			self.db.commit()
+
+		#Error, close
+		except:
+			self.close()
+			raise
+
+	def insert_fight(self,winner,loser):
+		try:
 			#Get ID
-			self.cursor.execute('select id from saltybet where winner=? and loser=?',(winner,loser))
+			self.cursor.execute('select id from fights where winner=? and loser=?',(winner,loser))
 			row_id=self.cursor.fetchone()
 			if row_id and len(row_id)>0:
 				row_id=row_id[0]
 
 			#Calculate count
-			self.cursor.execute('select count from saltybet where winner=? and loser=?',(winner,loser))
+			self.cursor.execute('select count from fights where winner=? and loser=?',(winner,loser))
 			count=self.cursor.fetchone()
 			if not count or len(count)<=0:
 				count=1
@@ -99,7 +133,7 @@ class database:
 				count=count[0]+1
 
 			#Insert/replace entry
-			self.cursor.execute('insert or replace into saltybet(id,winner,loser,count) values(?,?,?,?)',(row_id,winner,loser,count))
+			self.cursor.execute('insert or replace into fights(id,winner,loser,count) values(?,?,?,?)',(row_id,winner,loser,count))
 			self.db.commit()
 
 		#Error, close

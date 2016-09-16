@@ -2,7 +2,6 @@
 import saltybet
 import time
 
-db=saltybet.database()
 net=saltybet.network()
 
 def echo(line):
@@ -14,9 +13,8 @@ def pong():
 
 if __name__=='__main__':
 	while True:
-		parser=saltybet.parser(onwaifu=echo,onping=pong)
+		parser=saltybet.parser(onecho=echo,onping=pong)
 		try:
-			db.connect('saltybet.db')
 			net.connect('irc.chat.twitch.tv',6667)
 			while True:
 				parser.parse(net.read())
@@ -29,4 +27,3 @@ if __name__=='__main__':
 			print(error)
 			parser.reset()
 			net.close()
-			db.close()
