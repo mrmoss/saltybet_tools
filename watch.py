@@ -21,7 +21,6 @@ if __name__=='__main__':
 				time.sleep(0.1)
 		except KeyboardInterrupt:
 			net.close()
-			db.close()
 			exit(1)
 		except Exception as error:
 			print(error)
