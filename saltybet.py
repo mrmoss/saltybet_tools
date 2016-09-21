@@ -120,9 +120,13 @@ class database:
 		query_str='select * from rankings where fighter=?'
 		self.cursor.execute(query_str,(fighter,))
 		query=self.cursor.fetchone()
+		existed=True
 		if not query or len(query)!=7:
 			query=(None,fighter,0,0,0,0,0)
-		return self.ranking_from_query(query)
+			existed=False
+		ranking=self.ranking_from_query(query)
+		ranking["existed"]=existed
+		return ranking
 
 	def insert_fight(self,winner,loser):
 		#Get Fight
@@ -170,9 +174,13 @@ class database:
 
 		self.cursor.execute(query_str,args)
 		query=self.cursor.fetchone()
+		existed=True
 		if not query or len(query)!=4:
 			query=(None,winner,loser,0)
-		return self.fight_from_query(query)
+			existed=False
+		fight=self.fight_from_query(query)
+		fight["existed"]=existed
+		return fight
 
 class parser:
 	def __init__(self,onecho=None,onping=None,onwaifu=None,onmatch=None,onwin=None,onteam=None):
