@@ -161,16 +161,12 @@ class database:
 			query_str+='loser=?'
 			args.append(loser)
 
-		print(query_str)
-
 		if len(args)<1 or len(args)>2:
 			return None
 		if len(args)==1:
 			args=(args[0],)
 		if len(args)==2:
 			args=(args[0],args[1])
-
-		print(args)
 
 		self.cursor.execute(query_str,args)
 		query=self.cursor.fetchone()
@@ -181,6 +177,40 @@ class database:
 		fight=self.fight_from_query(query)
 		fight["existed"]=existed
 		return fight
+
+	def get_fights(self,winner,loser):
+		query_str='select * from fights where '
+		args=[]
+
+		if winner and len(winner)>0:
+			query_str+='winner=? '
+			args.append(winner)
+
+		if loser and len(loser)>0:
+			if winner and len(winner)>0:
+				query_str+='and '
+			query_str+='loser=?'
+			args.append(loser)
+
+		if len(args)<1 or len(args)>2:
+			return None
+		if len(args)==1:
+			args=(args[0],)
+		if len(args)==2:
+			args=(args[0],args[1])
+
+		self.cursor.execute(query_str,args)
+		fights=[]
+		queries=self.cursor.fetchall()
+		for query in queries:
+			existed=True
+			if not query or len(query)!=4:
+				query=(None,winner,loser,0)
+				existed=False
+			fight=self.fight_from_query(query)
+			fight["existed"]=existed
+			fights.append(fight)
+		return fights
 
 class parser:
 	def __init__(self,onecho=None,onping=None,onwaifu=None,onmatch=None,onwin=None,onteam=None):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import BaseHTTPServer
 import json
+import os
 import SimpleHTTPServer
 import saltybet
 import urllib
@@ -10,11 +11,20 @@ db=saltybet.database()
 
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
-		self.send_response(200)
-		self.send_header('Content-type','text/html')
-		self.end_headers()
-		self.wfile.write('<html></html>')
-		self.wfile.close()
+		try:
+			if self.path=='/':
+				self.path='/index.html'
+			self.path='web/'+self.path
+			if os.path.abspath(self.path).find(os.getcwd())!=0:
+				raise Exception('404')
+			file=open(self.path,'r')
+			self.send_response(200)
+			self.send_header('Content-type','text/html')
+			self.end_headers()
+			self.wfile.write(file.read())
+			self.wfile.close()
+		except Exception as error:
+			print(error)
 	def do_POST(self):
 		ret=''
 		try:
@@ -34,7 +44,8 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					loser=None
 					if 'loser' in data['fights'][ii]:
 						loser=data['fights'][ii]['loser']
-					ret['fights'].append(db.get_fight(winner,loser))
+					for fight in db.get_fights(winner,loser):
+						ret['fights'].append(fight)
 			ret=json.dumps(ret)
 		except Exception as error:
 			print('ERROR - '+str(error))

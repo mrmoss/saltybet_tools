@@ -1,0 +1,132 @@
+<html>
+	<head>
+		<title>test</title>
+		<h1>Salty Finder</h1>
+	</head>
+	<body>
+		Search: <input type='text' id='query_box' value='Jesse'/>
+		<button id='search_button'>Search</button>
+		<hr>
+		Results:<br/>
+		<table id='results_div' border='1px'></table>
+		<script>
+			var query_box=document.getElementById('query_box');
+			var search_button=document.getElementById('search_button');
+			search_button.onclick=search;
+			var results_table=document.getElementById('results_div');
+			print_row(results_table,['Search for a fighter.']);
+
+			function xhr(data,callback)
+			{
+				var xmlhttp=new XMLHttpRequest();
+				xmlhttp.onreadystatechange=function()
+				{
+					if(xmlhttp.readyState==4&&xmlhttp.status==200&&callback)
+						callback(xmlhttp.responseText);
+				};
+				xmlhttp.open('POST','',true);
+				xmlhttp.send(data);
+			}
+
+			function search()
+			{
+				var query=query_box.value;
+				var request=
+				{
+					fighters:[query],
+					fights:[{winner:query},{loser:query}]
+				};
+				xhr(JSON.stringify(request),function(data)
+				{
+					try
+					{
+						print_results(JSON.parse(data));
+					}
+					catch(error)
+					{
+						print_row(results_table,['Error - '+error]);
+					}
+				});
+			}
+
+			function print_results(json)
+			{
+				while(results_table.firstChild)
+					results_table.removeChild(results_table.firstChild);
+
+				var found_result=false;
+
+				for(var key in json.fighters)
+				{
+					if(!json.fighters[key].existed)
+						continue;
+
+					print_row(results_table,['Fighter',json.fighters[key].fighter]);
+					print_row(results_table,['Wins',json.fighters[key].wins]);
+					print_row(results_table,['Losses',json.fighters[key].losses]);
+					print_row(results_table,['Win Ratio',json.fighters[key].win_ratio+'%']);
+					found_result=true;
+					var fights=[];
+
+					for(var key2 in json.fights)
+					{
+						if(json.fights[key2].winner==json.fighters[key].fighter||
+							json.fights[key2].loser==json.fighters[key].fighter)
+							fights.push(json.fights[key2]);
+					}
+					print_row(results_table,['Fights',print_fight_table(json.fighters[key].fighter,fights)]);
+				}
+
+				if(!found_result)
+					print_row(results_table,['No results found.']);
+			}
+
+			function print_row(table,entries)
+			{
+				var row=document.createElement('tr');
+				table.appendChild(row);
+
+				for(var key in entries)
+				{
+					var cell=document.createElement('td');
+					row.appendChild(cell);
+					var node=entries[key];
+					if(!node.tagName&&!node.nodeName)
+						node=document.createTextNode(entries[key]);
+					cell.appendChild(node);
+				}
+			}
+
+			function create_table_single_cell(value)
+			{
+				var table=document.createElement('table');
+				table.border='1px';
+				var row=document.createElement('tr');
+				table.appendChild(row);
+				var cell=document.createElement('td');
+				row.appendChild(cell);
+				cell.appendChild(value);
+				return table;
+			}
+
+			function print_fight_table(fighter,fights)
+			{
+				var table=document.createElement('table');
+				table.border='1px';
+				print_row(table,['Challenger','Result','Count']);
+				for(var key in fights)
+				{
+					var challenger=fights[key].winner;
+					var result='Lost';
+					if(fights[key].winner==fighter)
+					{
+						challenger=fights[key].loser;
+						result='Won';
+					}
+					print_row(table,[challenger,result,fights[key].count]);
+				}
+				return table;
+			}
+		</script>
+	</body>
+</html>
