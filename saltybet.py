@@ -78,68 +78,101 @@ class database:
 			pass
 
 	def insert_ranking(self,winner,loser):
-		try:
-			sqlite_statement='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio) values(?,?,?,?,?,?,?)'
+		insert_str='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio) values(?,?,?,?,?,?,?)'
 
-			#Winner Entry
-			self.cursor.execute('select * from rankings where fighter=?',(winner,))
-			query=self.cursor.fetchone()
-			if not query or len(query)!=7:
-				query=(None,winner,0,0,0,0,0)
-			row_id=query[0]
-			name=query[1]
-			wins=query[2]+1
-			losses=query[3]
-			fights=query[4]+1
-			winratio=int(wins/float(fights)*100)
-			loseratio=100-winratio
-			self.cursor.execute(sqlite_statement,(row_id,name,wins,losses,fights,winratio,loseratio))
-			self.db.commit()
+		#Winner Entry
+		winner=self.get_ranking(winner)
+		winner['wins']+=1
+		winner['fights']+=1
+		winner['win_ratio']=int(winner['wins']/float(winner['fights'])*100)
+		winner['lose_ratio']=100-winner['win_ratio']
+		self.cursor.execute(insert_str,self.ranking_to_query(winner))
+		self.db.commit()
 
-			#Loser Entry
-			self.cursor.execute('select * from rankings where fighter=?',(loser,))
-			query=self.cursor.fetchone()
-			if not query or len(query)!=7:
-				query=(None,loser,0,0,0,0,0)
-			row_id=query[0]
-			name=query[1]
-			wins=query[2]
-			losses=query[3]+1
-			fights=query[4]+1
-			winratio=int(wins/float(fights)*100)
-			loseratio=100-winratio
-			self.cursor.execute(sqlite_statement,(row_id,name,wins,losses,fights,winratio,loseratio))
-			self.db.commit()
+		#Loser Entry
+		loser=self.get_ranking(loser)
+		loser['losses']+=1
+		loser['fights']+=1
+		loser['win_ratio']=int(loser['wins']/float(loser['fights'])*100)
+		loser['lose_ratio']=100-loser['win_ratio']
+		self.cursor.execute(insert_str,self.ranking_to_query(loser))
+		self.db.commit()
 
-		#Error, close
-		except:
-			self.close()
-			raise
+	def ranking_from_query(self,query):
+		return {'id':query[0],
+			'fighter':query[1],
+			'wins':query[2],
+			'losses':query[3],
+			'fights':query[4],
+			'win_ratio':query[5],
+			'lose_ratio':query[6]}
+
+	def ranking_to_query(self,obj):
+		return (obj['id'],
+			obj['fighter'],
+			obj['wins'],
+			obj['losses'],
+			obj['fights'],
+			obj['win_ratio'],
+			obj['lose_ratio'])
+
+	def get_ranking(self,fighter):
+		query_str='select * from rankings where fighter=?'
+		self.cursor.execute(query_str,(fighter,))
+		query=self.cursor.fetchone()
+		if not query or len(query)!=7:
+			query=(None,fighter,0,0,0,0,0)
+		return self.ranking_from_query(query)
 
 	def insert_fight(self,winner,loser):
-		try:
-			#Get ID
-			self.cursor.execute('select id from fights where winner=? and loser=?',(winner,loser))
-			row_id=self.cursor.fetchone()
-			if row_id and len(row_id)>0:
-				row_id=row_id[0]
+		#Get Fight
+		fight=self.get_fight(winner,loser)
+		fight['count']+=1
 
-			#Calculate count
-			self.cursor.execute('select count from fights where winner=? and loser=?',(winner,loser))
-			count=self.cursor.fetchone()
-			if not count or len(count)<=0:
-				count=1
-			else:
-				count=count[0]+1
+		#Insert/replace entry
+		insert_str='insert or replace into fights(id,winner,loser,count) values(?,?,?,?)'
+		self.cursor.execute(insert_str,self.fight_to_query(fight))
+		self.db.commit()
 
-			#Insert/replace entry
-			self.cursor.execute('insert or replace into fights(id,winner,loser,count) values(?,?,?,?)',(row_id,winner,loser,count))
-			self.db.commit()
+	def fight_from_query(self,query):
+		return {'id':query[0],
+			'winner':query[1],
+			'loser':query[2],
+			'count':query[3]}
 
-		#Error, close
-		except:
-			self.close()
-			raise
+	def fight_to_query(self,obj):
+		return (obj['id'],obj['winner'],obj['loser'],obj['count'])
+
+	def get_fight(self,winner,loser):
+		query_str='select * from fights where '
+		args=[]
+
+		if winner and len(winner)>0:
+			query_str+='winner=? '
+			args.append(winner)
+
+		if loser and len(loser)>0:
+			if winner and len(winner)>0:
+				query_str+='and '
+			query_str+='loser=?'
+			args.append(loser)
+
+		print(query_str)
+
+		if len(args)<1 or len(args)>2:
+			return None
+		if len(args)==1:
+			args=(args[0],)
+		if len(args)==2:
+			args=(args[0],args[1])
+
+		print(args)
+
+		self.cursor.execute(query_str,args)
+		query=self.cursor.fetchone()
+		if not query or len(query)!=4:
+			query=(None,winner,loser,0)
+		return self.fight_from_query(query)
 
 class parser:
 	def __init__(self,onecho=None,onping=None,onwaifu=None,onmatch=None,onwin=None,onteam=None):
