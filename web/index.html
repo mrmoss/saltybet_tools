@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>test</title>
+		<title>Salty Finder</title>
 		<h1>Salty Finder</h1>
 	</head>
 	<body>
@@ -11,8 +11,14 @@
 		<table id='results_div' border='1px'></table>
 		<script>
 			var query_box=document.getElementById('query_box');
+			query_box.addEventListener('keydown',function(evt)
+			{
+				if(evt.keyCode==13)
+					search_button.click();
+			});
+			query_box.focus();
 			var search_button=document.getElementById('search_button');
-			search_button.onclick=search;
+			search_button.addEventListener('click',search);
 			var results_table=document.getElementById('results_div');
 			print_row(results_table,['Search for a fighter.']);
 
