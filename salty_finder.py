@@ -12,12 +12,7 @@ db=saltybet.database()
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
 		try:
-			if self.path=='/':
-				self.path='/index.html'
-			self.path='web/'+self.path
-			if os.path.abspath(self.path).find(os.getcwd())!=0:
-				raise Exception('404')
-			file=open(self.path,'r')
+			file=open('web/index.html','r')
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
 			self.end_headers()

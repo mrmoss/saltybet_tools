@@ -21,6 +21,13 @@
 			search_button.addEventListener('click',search);
 			var results_table=document.getElementById('results_div');
 			print_row(results_table,['Search for a fighter.']);
+			var uri=parse_uri();
+
+			if(uri&&uri.fighter)
+			{
+				query_box.value=uri.fighter;
+				search_button.click();
+			}
 
 			function xhr(data,callback)
 			{
@@ -32,6 +39,34 @@
 				};
 				xmlhttp.open('POST','',true);
 				xmlhttp.send(data);
+			}
+
+			function parse_uri()
+			{
+				var queries={};
+				var query=window.location.search.substring(1);
+				var vars=query.split('&');
+
+				for(let ii=0;ii<vars.length;++ii)
+				{
+					var pair=vars[ii].split('=');
+
+					if(typeof(queries[pair[0]])==='undefined')
+					{
+						queries[pair[0]]=decodeURIComponent(pair[1]);
+					}
+					else if(typeof(queries[pair[0]])==='string')
+					{
+						var arr=[queries[pair[0]],decodeURIComponent(pair[1])];
+						queries[pair[0]]=arr;
+					}
+					else
+					{
+						queries[pair[0]].push(decodeURIComponent(pair[1]));
+					}
+				}
+
+				return queries;
 			}
 
 			function search()
@@ -67,7 +102,7 @@
 					if(!json.fighters[key].existed)
 						continue;
 
-					print_row(results_table,['Fighter',json.fighters[key].fighter]);
+					print_row(results_table,['Fighter',fighter_link(json.fighters[key].fighter)]);
 					print_row(results_table,['Wins',json.fighters[key].wins]);
 					print_row(results_table,['Losses',json.fighters[key].losses]);
 					print_row(results_table,['Win Ratio',json.fighters[key].win_ratio+'%']);
@@ -75,11 +110,9 @@
 					var fights=[];
 
 					for(var key2 in json.fights)
-					{
 						if(json.fights[key2].winner==json.fighters[key].fighter||
 							json.fights[key2].loser==json.fighters[key].fighter)
 							fights.push(json.fights[key2]);
-					}
 					print_row(results_table,['Fights',print_fight_table(json.fighters[key].fighter,fights)]);
 				}
 
@@ -119,19 +152,27 @@
 			{
 				var table=document.createElement('table');
 				table.border='1px';
-				print_row(table,['Challenger','Result','Count']);
+				print_row(table,['Challenger',fighter+' Was','Count']);
 				for(var key in fights)
 				{
-					var challenger=fights[key].winner;
-					var result='Lost';
+					var challenger=fighter_link(fights[key].winner);
+					var result='Loser';
 					if(fights[key].winner==fighter)
 					{
-						challenger=fights[key].loser;
-						result='Won';
+						challenger=fighter_link(fights[key].loser);
+						result='Winner';
 					}
 					print_row(table,[challenger,result,fights[key].count]);
 				}
 				return table;
+			}
+
+			function fighter_link(fighter)
+			{
+				var a=document.createElement('a');
+				a.href='/?fighter='+encodeURIComponent(fighter);
+				a.innerHTML=fighter;
+				return a;
 			}
 		</script>
 	</body>
