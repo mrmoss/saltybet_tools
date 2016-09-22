@@ -116,8 +116,12 @@ class database:
 			obj['win_ratio'],
 			obj['lose_ratio'])
 
-	def get_ranking(self,fighter):
-		query_str='select * from rankings where fighter=?'
+	def get_ranking(self,fighter,case_sensitive=True):
+		query_str='select * from rankings where '
+		if case_sensitive:
+			query_str+='fighter=?'
+		else:
+			query_str+='lower(fighter) like lower(?)'
 		self.cursor.execute(query_str,(fighter,))
 		query=self.cursor.fetchone()
 		existed=True
@@ -178,18 +182,24 @@ class database:
 		fight["existed"]=existed
 		return fight
 
-	def get_fights(self,winner,loser):
-		query_str='select * from fights where '
+	def get_fights(self,winner,loser,case_sensitive=True):
+		query_str='select * from fights where'
 		args=[]
 
 		if winner and len(winner)>0:
-			query_str+='winner=? '
+			if case_sensitive:
+				query_str+=' winner=?'
+			else:
+				query_str+=' lower(winner) like lower(?)'
 			args.append(winner)
 
 		if loser and len(loser)>0:
 			if winner and len(winner)>0:
-				query_str+='and '
-			query_str+='loser=?'
+				query_str+=' and'
+			if case_sensitive:
+				query_str+=' loser=?'
+			else:
+				query_str+=' lower(loser) like lower(?)'
 			args.append(loser)
 
 		if len(args)<1 or len(args)>2:
@@ -210,6 +220,7 @@ class database:
 			fight=self.fight_from_query(query)
 			fight["existed"]=existed
 			fights.append(fight)
+
 		return fights
 
 class parser:

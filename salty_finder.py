@@ -29,7 +29,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			if 'fighters' in data:
 				ret['fighters']=[]
 				for ii in range(len(data['fighters'])):
-					ret['fighters'].append(db.get_ranking(data['fighters'][ii]))
+					ret['fighters'].append(db.get_ranking(data['fighters'][ii],False))
 			if 'fights' in data:
 				ret['fights']=[]
 				for ii in range(len(data['fights'])):
@@ -39,7 +39,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					loser=None
 					if 'loser' in data['fights'][ii]:
 						loser=data['fights'][ii]['loser']
-					for fight in db.get_fights(winner,loser):
+					for fight in db.get_fights(winner,loser,False):
 						ret['fights'].append(fight)
 			ret=json.dumps(ret)
 		except Exception as error:
