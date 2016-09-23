@@ -29,7 +29,15 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			if 'fighters' in data:
 				ret['fighters']=[]
 				for ii in range(len(data['fighters'])):
-					ret['fighters'].append(db.get_ranking(data['fighters'][ii],False))
+					data['fighters'][ii]=data['fighters'][ii].strip('%')
+					data['fighters'][ii]=data['fighters'][ii].strip('*')
+					if len(data['fighters'][ii])==0:
+						continue
+					if len(data['fighters'][ii])>=3:
+						data['fighters'][ii]='%'+data['fighters'][ii]
+					data['fighters'][ii]+='%'
+					for fighter in db.get_rankings(data['fighters'][ii],False):
+						ret['fighters'].append(fighter)
 			if 'fights' in data:
 				ret['fights']=[]
 				for ii in range(len(data['fights'])):

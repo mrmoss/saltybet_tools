@@ -132,6 +132,25 @@ class database:
 		ranking["existed"]=existed
 		return ranking
 
+	def get_rankings(self,fighter,case_sensitive=True):
+		query_str='select * from rankings where '
+		if case_sensitive:
+			query_str+='fighter=?'
+		else:
+			query_str+='lower(fighter) like lower(?)'
+		self.cursor.execute(query_str,(fighter,))
+		queries=self.cursor.fetchall()
+		rankings=[]
+		for query in queries:
+			existed=True
+			if not query or len(query)!=7:
+				query=(None,fighter,0,0,0,0,0)
+				existed=False
+			ranking=self.ranking_from_query(query)
+			ranking["existed"]=existed
+			rankings.append(ranking)
+		return rankings
+
 	def insert_fight(self,winner,loser):
 		#Get Fight
 		fight=self.get_fight(winner,loser)
