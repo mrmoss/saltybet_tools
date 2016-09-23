@@ -79,8 +79,7 @@
 				query=query.trim();
 				var request=
 				{
-					fighters:[query],
-					fights:[{winner:query},{loser:query}]
+					fighters:[query]
 				};
 				xhr(JSON.stringify(request),function(data)
 				{
@@ -112,13 +111,9 @@
 					print_row(results_table,['Losses',json.fighters[key].losses]);
 					print_row(results_table,['Win Ratio',json.fighters[key].win_ratio+'%']);
 					found_result=true;
-					var fights=[];
 
-					for(var key2 in json.fights)
-						if(json.fights[key2].winner==json.fighters[key].fighter||
-							json.fights[key2].loser==json.fighters[key].fighter)
-							fights.push(json.fights[key2]);
-					print_row(results_table,['Fights',print_fight_table(json.fighters[key].fighter,fights)]);
+					print_row(results_table,['Fights',print_fight_table(json.fighters[key].fighter,
+						json.fighters[key].matches)]);
 				}
 
 				if(!found_result)

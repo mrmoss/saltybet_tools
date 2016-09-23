@@ -19,7 +19,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(file.read())
 			self.wfile.close()
 		except Exception as error:
-			print(error)
+			print('ERROR - '+str(error))
 	def do_POST(self):
 		ret=''
 		try:
@@ -37,22 +37,15 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						data['fighters'][ii]='%'+data['fighters'][ii]
 					data['fighters'][ii]+='%'
 					for fighter in db.get_rankings(data['fighters'][ii],False):
+						fighter['matches']=[]
+						for fight in db.get_fights(fighter['fighter'],None,False):
+							fighter['matches'].append(fight)
+						for fight in db.get_fights(None,fighter['fighter'],False):
+							fighter['matches'].append(fight)
 						ret['fighters'].append(fighter)
-			if 'fights' in data:
-				ret['fights']=[]
-				for ii in range(len(data['fights'])):
-					winner=None
-					if 'winner' in data['fights'][ii]:
-						winner=data['fights'][ii]['winner']
-					loser=None
-					if 'loser' in data['fights'][ii]:
-						loser=data['fights'][ii]['loser']
-					for fight in db.get_fights(winner,loser,False):
-						ret['fights'].append(fight)
 			ret=json.dumps(ret)
 		except Exception as error:
 			print('ERROR - '+str(error))
-			pass
 		self.send_response(200)
 		self.send_header('Content-type','text/plain')
 		self.end_headers()
@@ -65,5 +58,5 @@ if __name__=='__main__':
 		Handler=MyHandler
 		server=BaseHTTPServer.HTTPServer(('127.0.0.1',8080),MyHandler)
 		server.serve_forever()
-	except:
-		pass
+	except Exception as error:
+		print('ERROR - '+str(error))
