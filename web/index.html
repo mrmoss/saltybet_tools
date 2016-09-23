@@ -106,7 +106,7 @@
 					if(!json.fighters[key].existed)
 						continue;
 
-					print_row(results_table,['Fighter',fighter_link(json.fighters[key].fighter)]);
+					print_row(results_table,['Fighter',fighter_link('\''+json.fighters[key].fighter+'\'')]);
 					print_row(results_table,['Wins',json.fighters[key].wins]);
 					print_row(results_table,['Losses',json.fighters[key].losses]);
 					print_row(results_table,['Win Ratio',json.fighters[key].win_ratio+'%']);
@@ -161,11 +161,11 @@
 				print_row(table,['Challenger',fighter+' Was','Count']);
 				for(var key in fights)
 				{
-					var challenger=fighter_link(fights[key].winner);
+					var challenger=fighter_link('\''+fights[key].winner+'\'');
 					var result='Loser';
 					if(fights[key].winner==fighter)
 					{
-						challenger=fighter_link(fights[key].loser);
+						challenger=fighter_link('\''+fights[key].loser+'\'');
 						result='Winner';
 					}
 					print_row(table,[challenger,result,fights[key].count]);
@@ -178,6 +178,9 @@
 			{
 				var a=document.createElement('a');
 				a.href='?fighter='+encodeURIComponent(fighter);
+				if(fighter.length>1&&fighter[0]==fighter[fighter.length-1]&&
+					(fighter[0]=='\''||fighter[0]=='"'))
+					fighter=fighter.substr(1,fighter.length-2);
 				a.innerHTML=fighter;
 				return a;
 			}

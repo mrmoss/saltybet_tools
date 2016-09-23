@@ -29,17 +29,29 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			if 'fighters' in data:
 				ret['fighters']=[]
 				for ii in range(len(data['fighters'])):
-					data['fighters'][ii]=data['fighters'][ii].strip('%')
-					data['fighters'][ii]=data['fighters'][ii].strip('*')
-					if len(data['fighters'][ii])==0:
+					query=data['fighters'][ii]
+					query=query.strip('%')
+					query=query.strip('*')
+					exact=False
+					if len(query)==0:
 						continue
-					if len(data['fighters'][ii])>=3:
-						data['fighters'][ii]='%'+data['fighters'][ii]+'%'
-					for fighter in db.get_rankings(data['fighters'][ii],False):
+					if len(query)>1 and query[0]==query[-1] and (query[0]=='\'' or query[0]=='"'):
+						exact=True
+						query=query[1:-1]
+					elif len(query)>=3:
+						query='%'+query+'%'
+					rankings=[]
+					print('EXACT '+str(exact))
+					if exact:
+						print(db.get_ranking(query))
+						rankings.append(db.get_ranking(query))
+					else:
+						rankings=db.get_rankings(query,False)
+					for fighter in rankings:
 						fighter['matches']=[]
-						for fight in db.get_fights(fighter['fighter'],None,False):
+						for fight in db.get_fights(fighter['fighter'],None):
 							fighter['matches'].append(fight)
-						for fight in db.get_fights(None,fighter['fighter'],False):
+						for fight in db.get_fights(None,fighter['fighter']):
 							fighter['matches'].append(fight)
 						ret['fighters'].append(fighter)
 			ret=json.dumps(ret)
