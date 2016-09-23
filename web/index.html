@@ -4,7 +4,7 @@
 		<h1>Salty Finder</h1>
 	</head>
 	<body>
-		Search: <input type='text' id='query_box' value='Jesse'/>
+		Search: <input type='text' id='query_box' value=''/>
 		<button id='search_button'>Search</button>
 		<hr>
 		Results:<br/>
@@ -28,7 +28,10 @@
 			var uri=parse_uri();
 
 			if(uri&&uri.fighter)
+			{
 				search(uri.fighter);
+				query_box.value=uri.fighter;
+			}
 
 			function xhr(data,callback)
 			{
