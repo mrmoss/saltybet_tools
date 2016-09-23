@@ -34,8 +34,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					if len(data['fighters'][ii])==0:
 						continue
 					if len(data['fighters'][ii])>=3:
-						data['fighters'][ii]='%'+data['fighters'][ii]
-					data['fighters'][ii]+='%'
+						data['fighters'][ii]='%'+data['fighters'][ii]+'%'
 					for fighter in db.get_rankings(data['fighters'][ii],False):
 						fighter['matches']=[]
 						for fight in db.get_fights(fighter['fighter'],None,False):
