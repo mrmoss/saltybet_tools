@@ -1,3 +1,4 @@
+var url_home='/';
 var last_match={red:null,blue:null};
 
 function xhr(data,callback)
@@ -176,7 +177,7 @@ function print_fight_table(fighter,fights)
 function fighter_link(fighter)
 {
 	var a=document.createElement('a');
-	a.href='?fighter='+encodeURIComponent(fighter);
+	a.href=url_home+'?fighter='+encodeURIComponent(fighter);
 	if(fighter.length>1&&fighter[0]==fighter[fighter.length-1]&&
 		(fighter[0]=='\''||fighter[0]=='"'))
 		fighter=fighter.substr(1,fighter.length-2);
