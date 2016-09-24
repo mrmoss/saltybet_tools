@@ -78,7 +78,7 @@ function get_match()
 				{
 					clear_table();
 					last_match=data.match;
-					search([data.match.red,data.match.blue]);
+					search(['\''+data.match.red+'\'','\''+data.match.blue+'\'']);
 				}
 			}
 			else
