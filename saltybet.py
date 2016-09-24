@@ -66,6 +66,7 @@ class database:
 		self.close()
 		self.db=sqlite3.connect(filename)
 		self.cursor=self.db.cursor()
+		self.cursor.execute('create table if not exists current(red text,blue text)')
 		self.cursor.execute('create table if not exists fights(id integer primary key autoincrement,winner text,loser text,count integer)')
 		self.cursor.execute('create table if not exists rankings(id integer primary key autoincrement,fighter text,wins integer,losses integer,fights integer,win_ratio integer,lose_ratio integer)')
 		self.db.commit()
@@ -76,6 +77,21 @@ class database:
 			self.cursor=None
 		except:
 			pass
+
+	def set_match(self,red,blue):
+		self.cursor.execute('drop table if exists current')
+		self.cursor.execute('create table if not exists current(red text,blue text)')
+		insert_str='insert into current(red,blue) values(?,?)'
+		self.cursor.execute(insert_str,(red,blue))
+		self.db.commit()
+
+	def get_match(self):
+		query_str='select * from current'
+		self.cursor.execute(query_str)
+		query=self.cursor.fetchone()
+		if not query or len(query)!=2:
+			query=(None,None)
+		return {'red':query[0],'blue':query[1]}
 
 	def insert_ranking(self,winner,loser):
 		insert_str='insert or replace into rankings(id,fighter,wins,losses,fights,win_ratio,lose_ratio) values(?,?,?,?,?,?,?)'

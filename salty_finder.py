@@ -12,7 +12,14 @@ db=saltybet.database()
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
 		try:
-			file=open('web/index.html','r')
+			self.path=self.path.strip()
+			if self.path=='/salty.js':
+				self.path='web/salty.js'
+			elif self.path=='/live':
+				self.path='web/live.html'
+			else:
+				self.path='web/index.html'
+			file=open(self.path,'r')
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
 			self.end_headers()
@@ -26,6 +33,8 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			data=self.rfile.read(int(self.headers.getheader('content-length',0)))
 			data=json.loads(data)
 			ret={}
+			if 'match' in data and data['match']:
+				ret['match']=db.get_match()
 			if 'fighters' in data:
 				ret['fighters']=[]
 				for ii in range(len(data['fighters'])):
@@ -41,7 +50,6 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 					elif len(query)>=3:
 						query='%'+query+'%'
 					rankings=[]
-					print('EXACT '+str(exact))
 					if exact:
 						print(db.get_ranking(query))
 						rankings.append(db.get_ranking(query))

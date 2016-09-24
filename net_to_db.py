@@ -10,6 +10,7 @@ def echo(line):
 
 def match(red,blue):
 	print('Match:  "'+red+'" vs "'+blue+'"')
+	db.set_match(red,blue)
 
 def insert(winner,loser):
 	print('Result: "'+winner+'" beat "'+loser+'"')
@@ -25,7 +26,7 @@ if __name__=='__main__':
 	while True:
 		parser=saltybet.parser(onmatch=match,onwin=insert,onping=pong)
 		if verbose:
-			parser.onecho=echo
+			parser.onwaifi=echo
 		try:
 			db.connect('saltybet.db')
 			net.connect('irc.chat.twitch.tv',6667)
