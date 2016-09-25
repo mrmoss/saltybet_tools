@@ -12,13 +12,19 @@ db=saltybet.database()
 class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 	def do_GET(self):
 		try:
-			self.path=self.path.strip()
-			if self.path=='/salty.js':
-				self.path='web/salty.js'
-			elif self.path=='/live':
-				self.path='web/live.html'
-			else:
-				self.path='web/index.html'
+			self.path=self.path.split('?')
+			query_str='?'.join(self.path[1:])
+			if len(query_str)>0:
+				query_str='?'+query_str
+			self.path=self.path[0]
+			if len(self.path)>0 and self.path[-1]=='/':
+				self.path+='index.html'
+			cwd=os.getcwd()+'/web/'
+			self.path=os.path.abspath(cwd+self.path)
+			if self.path.find(cwd)!=0 or not os.path.isfile(self.path):
+				self.send_response(404)
+				self.end_headers()
+				return
 			file=open(self.path,'r')
 			self.send_response(200)
 			self.send_header('Content-type','text/html')
@@ -26,11 +32,14 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 			self.wfile.write(file.read())
 			self.wfile.close()
 		except Exception as error:
-			print('ERROR - '+str(error))
+			self.send_response(401)
 	def do_POST(self):
-		ret=''
 		try:
-			data=self.rfile.read(int(self.headers.getheader('content-length',0)))
+			data_len=int(self.headers.getheader('content-length',0))
+			if data_len>2e6:
+				self.send_response(413)
+				self.end_headers()
+			data=self.rfile.read(data_len)
 			data=json.loads(data)
 			ret={}
 			if 'match' in data and data['match']:
@@ -63,13 +72,14 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 							fighter['matches'].append(fight)
 						ret['fighters'].append(fighter)
 			ret=json.dumps(ret)
+			self.send_response(200)
+			self.send_header('Content-type','text/plain')
+			self.end_headers()
+			self.wfile.write(ret)
+			self.wfile.close()
 		except Exception as error:
-			print('ERROR - '+str(error))
-		self.send_response(200)
-		self.send_header('Content-type','text/plain')
-		self.end_headers()
-		self.wfile.write(ret)
-		self.wfile.close()
+			self.send_response(401)
+			self.end_headers()
 
 if __name__=='__main__':
 	try:
