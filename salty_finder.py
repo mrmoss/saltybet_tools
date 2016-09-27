@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import BaseHTTPServer
 import json
+import mimetypes
 import os
 import SimpleHTTPServer
 import saltybet
@@ -27,7 +28,13 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 				return
 			file=open(self.path,'r')
 			self.send_response(200)
-			self.send_header('Content-type','text/html')
+			mime=mimetypes.guess_type(self.path)
+			if len(mime)>0:
+				mime=mime[0]
+			else:
+				mime='text/plain'
+			print(mime+' '+self.path)
+			self.send_header('Content-type',mime)
 			self.end_headers()
 			self.wfile.write(file.read())
 			self.wfile.close()
@@ -60,7 +67,6 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						query='%'+query+'%'
 					rankings=[]
 					if exact:
-						print(db.get_ranking(query))
 						rankings.append(db.get_ranking(query))
 					else:
 						rankings=db.get_rankings(query,False)
@@ -73,7 +79,7 @@ class MyHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 						ret['fighters'].append(fighter)
 			ret=json.dumps(ret)
 			self.send_response(200)
-			self.send_header('Content-type','text/plain')
+			self.send_header('Content-type','application/javascript')
 			self.end_headers()
 			self.wfile.write(ret)
 			self.wfile.close()
