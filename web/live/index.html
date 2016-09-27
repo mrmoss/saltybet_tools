@@ -15,11 +15,13 @@
 			.nav-icon
 			{
 				width:48px;
-				float:left;
-				margin-top:6px;
-				margin-bottom:-6px;
-				margin-left:12px;
-				margin-right:-24px;
+				margin-top:-8px;
+				margin-right:-8px;
+			}
+
+			.nav-title
+			{
+				float:right;
 			}
 		</style>
 		<script src='../js/jquery-3.1.1.min.js'></script>
@@ -40,8 +42,12 @@
 						<span class='icon-bar'></span>
 						<span class='icon-bar'></span>
 					</button>
-					<img src='../img/salt.png' class='nav-icon'/>
-					<span class='navbar-brand'>Salty Finder</span>
+					<span class='navbar-brand'>
+						<span>
+							<img class='nav-icon' src='../img/salt.png'>
+							<span class='nav-title'>Salty Finder</span>
+						</span>
+					</span>
 				</div>
 				<div id='navbar' class='navbar-collapse collapse'>
 					<ul class='nav navbar-nav'>
