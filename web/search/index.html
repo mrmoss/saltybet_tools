@@ -4,10 +4,9 @@
 		<script src='../js/jquery-3.1.1.min.js'></script>
 		<script src='../js/bootstrap.min.js'></script>
 		<script src='../js/salty_finder.js'></script>
-		<script src='../js/live.js'></script>
 		<script src='../js/search.js'></script>
 		<script src='../js/utility.js'></script>
-		<title>Salty Finder - Live</title>
+		<title>Salty Finder - Search</title>
 	</head>
 	<body role='document'>
 		<nav class='navbar navbar-inverse navbar-fixed-top nohighlight'>
@@ -31,22 +30,49 @@
 		</nav>
 		<div class='container theme-showcase' role='main' style='padding-top: 32px;'>
 			<div class='page-header'>
-				<h1>Live</h1>
+				<h1>Search</h1>
 			</div>
 			<div class='row'>
-				<div id='red_div' class='col-lg-6'>Loading results...</div>
-				<div id='blue_div' class='col-lg-6'></div>
+				<div class='col-lg-2'></div>
+				<div class='col-lg-8'>
+					<div class='input-group'>
+						<input id='query_box' type='text' class='form-control' placeholder='Fighter'>
+						<span class='input-group-btn'>
+							<button id='search_button' class='btn btn-default' type='button'>Search</button>
+						</span>
+					</div>
+				</div>
+				<div class='col-lg-2'></div>
+			</div>
+			<br/>
+			<div class='row'>
+				<div class='col-lg-2'></div>
+				<div id='results_div' class='col-lg-8'></div>
+				<div class='col-lg-2'></div>
 			</div>
 		</div>
 		<script>
-			var last_match={red:null,blue:null};
-			var red_div=document.getElementById('red_div');
-			var blue_div=document.getElementById('blue_div');
-
-			setInterval(function()
+			var query_box=document.getElementById('query_box');
+			query_box.addEventListener('keydown',function(evt)
 			{
-				get_match(red_div,blue_div);
-			},1000);
+				if(evt.keyCode==13&&query_box.value.length>0)
+					search_button.click();
+			});
+			query_box.focus();
+			var search_button=document.getElementById('search_button');
+			search_button.addEventListener('click',function()
+			{
+				var a=fighter_link(query_box.value.trim());
+				a.click();
+			});
+			var results_div=document.getElementById('results_div');
+
+			var uri=parse_uri();
+			if(uri&&uri.fighter)
+			{
+				search(results_div,[uri.fighter]);
+				query_box.value=uri.fighter;
+			}
 		</script>
 	</body>
 </html>
