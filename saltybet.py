@@ -20,7 +20,7 @@ class network:
 			self.sock.send('JOIN #saltybet\r\n')
 
 		#Error, die and rethrow
-		except:
+		except Exception:
 			self.close()
 			raise
 
@@ -28,7 +28,7 @@ class network:
 		try:
 			self.parser.reset()
 			self.sock.close()
-		except:
+		except Exception:
 			pass
 
 	def available(self,conn):
@@ -36,7 +36,7 @@ class network:
 			readable,writeable,errored=select.select([conn],[],[],0)
 			if conn in readable:
 				return True
-		except:
+		except Exception:
 			pass
 		return False
 
@@ -57,7 +57,7 @@ class network:
 			return buf
 
 		#Error, die and rethrow
-		except:
+		except Exception:
 			self.close()
 			raise
 
@@ -75,7 +75,7 @@ class database:
 		try:
 			self.db.close()
 			self.cursor=None
-		except:
+		except Exception:
 			pass
 
 	def set_match(self,red,blue):
